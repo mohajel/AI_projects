@@ -1,9 +1,9 @@
 import random
 
-#TODO assign numbers to variables below
-crossoverProbability = #probabality
-carryPercentage = #prob
-populationSize = #size
+CROSSOVER_PROBIBILITY = 0.3
+CARRY_PERCENTAGE = 0.2
+POPULATION_SIZE = 100
+FOUND = 100
 
 class EquationBuilder:
     
@@ -17,6 +17,7 @@ class EquationBuilder:
         self.population = self.makeFirstPopulation()
         
     def makeFirstPopulation(self):
+        pass
         #TODO create random chromosomes to build the early population, and return it
     
     def findEquation(self):
@@ -25,13 +26,18 @@ class EquationBuilder:
             random.shuffle(self.population)
 
             fitnesses = []
-            for i in range(populationSize):
+            for i in range(POPULATION_SIZE):
+                fitness = self.calcFitness(self.population[i])
+                if fitness == FOUND:
+                    return self.population[i]
+                fitnesses.append(fitness)
+                
                 #TODO calculate the fitness of each chromosome
                 #TODO return chromosome if a solution is found, else save the fitness in an array
 
             #TODO find the best chromosomes based on their fitnesses, and carry them directly to the next generation (optional)
             carriedChromosomes = []
-            for i in range(0, int(populationSize*carryPercentage)):
+            for i in range(0, int(POPULATION_SIZE*CARRY_PERCENTAGE)):
                 carriedChromosomes.append(bestChromosome[i]) 
 
             # A pool consisting of potential candidates for mating (crossover and mutation)    
@@ -44,13 +50,14 @@ class EquationBuilder:
             self.population.clear()
 
             # Create the portion of population that is undergone crossover and mutation
-            for i in range(populationSize - int(populationSize*carryPercentage)):
+            for i in range(POPULATION_SIZE - int(POPULATION_SIZE*CARRY_PERCENTAGE)):
                 self.population.append(self.mutate(crossoverPool[i]))
                 
             # Add the prominent chromosomes directly to next generation
             self.population.extend(carriedChromosomes)
     
     def createMatingPool(self):
+        matingPool = 12
         #TODO make a brand new custom pool to accentuate prominent chromosomes (optional)
         #TODO create the matingPool using custom pool created in the last step and return it
         return matingPool
@@ -58,9 +65,11 @@ class EquationBuilder:
     def createCrossoverPool(self, matingPool):
         crossoverPool = []
         for i in range(len(matingPool)):
-            if random.random() > crossoverProbability:
+            if random.random() > CROSSOVER_PROBIBILITY:
+                pass
                 #TODO don't perform crossover and add the chromosomes to the next generation directly to crossoverPool
             else:
+                pass
                 #TODO find 2 child chromosomes, crossover, and add the result to crossoverPool
         return crossoverPool
     
@@ -69,6 +78,7 @@ class EquationBuilder:
         return chromosome
 
     def calcFitness(self, chromosome):
+        pass
         #TODO define the fitness measure here
 
 
@@ -77,6 +87,6 @@ operators = ['+', '-', '*']
 equationLength = 21
 goalNumber = 18019
 
-equationBuilder = EquationBuilEquationBuilder(operators, operands, equationLength, goalNumber)
+equationBuilder = EquationBuilder(operators, operands, equationLength, goalNumber)
 equation = equationBuilder.findEquation()
 print(equation)
