@@ -3,7 +3,7 @@ import random
 CROSSOVER_PROBIBILITY = 0.3
 CARRY_PERCENTAGE = 0.2
 POPULATION_SIZE = 100
-FOUND = 100
+FOUND = 0
 
 class EquationBuilder:
     
@@ -12,13 +12,12 @@ class EquationBuilder:
         self.operands = operands
         self.equationLength = equationLength
         self.goalNumber = goalNumber
-
-        # Create the earliest population at the begining
         self.population = self.makeFirstPopulation()
         
     def makeFirstPopulation(self):
-        pass
-        #TODO create random chromosomes to build the early population, and return it
+        population = []
+        for i in range(POPULATION_SIZE):
+
     
     def findEquation(self):
         # Create a new generation of chromosomes, and make it better in every iteration
