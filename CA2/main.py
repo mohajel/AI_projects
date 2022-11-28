@@ -1,5 +1,5 @@
 from select import select
-from symbol import dotted_as_name
+# from symbol import dotted_as_name
 import turtle
 import math
 import random
@@ -94,9 +94,11 @@ class Sim:
     
                 
     def _evaluate(self):
+        pass
         #TODO
 
     def minimax(self, depth, player_turn):
+        pass
         #TODO
         
     def enemy(self):
