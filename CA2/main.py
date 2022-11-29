@@ -5,14 +5,24 @@ import math
 import random
 from time import sleep
 from sys import argv
+import copy as cp
+
+NOT_FOUND = -1
 
 class State:
 
-    def __init__(self, red, blue, available_moves, turn) -> None:
+    def __init__(self, red :list, blue :list, available_moves :list, turn :str, parent = None) -> None:
         self.red_moves = red
         self.blue_moves = blue
         self.avavailable_moves = available_moves
         self.turn = turn
+        self.parent = parent
+        self.value = NOT_FOUND
+
+    def get_value(self):
+        if self.value == NOT_FOUND:
+            print("ERROR VALUE NOT FOUND")
+        return self.value
 
     def _get_number_of_repeative_dots(self, lines):
         dots = []
@@ -26,13 +36,27 @@ class State:
         blue_repeative_dots = self._get_number_of_repeative_dots(self.blue)
         red_repeative_dots = self._get_number_of_repeative_dots(self.red)
 
-        return ((blue_repeative_dots - (3 * red_repeative_dots)) + 100)
+        self.value = ((blue_repeative_dots - (3 * red_repeative_dots)) + 100)
+        return self.value
 
+    def get_successors(self):
+        successors = []
+        for move in self.available_moves:
+            red = cp.deepcopy(self.red_moves)
+            blue = cp.deepcopy(self.blue_moves)
+            available = cp.deepcopy(self.avavailable_moves)
+            available.remove(move)
+            if self.turn == "red":
+                red.append(move)
+                successors.append(State(red, blue, available, "blue", self))
+            else:
+                blue.append(move)
+                successors.append(State(red, blue, available, "red", self))
+        return successors
 
-
-
+            
 class Sim:
-    # Set true for graphical interface
+    
     GUI = False
     screen = None
     selection = []
@@ -122,17 +146,6 @@ class Sim:
             return self.alpha_beta_tree(depth, player_turn)
         return self.minimax_tree(depth, player_turn)
 
-
-    # def _evaluate(self):
-    #     pass
-
-    def alpha_beta_tree(self, depth, player_turn):
-        pass
-
-
-    def minimax_tree(self, depth, player_turn):
-        pass
-        
     def enemy(self):
         return random.choice(self.available_moves)
 
