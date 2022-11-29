@@ -6,6 +6,31 @@ import random
 from time import sleep
 from sys import argv
 
+class State:
+
+    def __init__(self, red, blue, available_moves, turn) -> None:
+        self.red_moves = red
+        self.blue_moves = blue
+        self.avavailable_moves = available_moves
+        self.turn = turn
+
+    def _get_number_of_repeative_dots(self, lines):
+        dots = []
+        for line in lines:
+            dots.append(line[0])
+            dots.append(line[1])
+
+        return len(dots) - len(list(dict.fromkeys(dots)))
+
+    def get_huristic(self) -> int:
+        blue_repeative_dots = self._get_number_of_repeative_dots(self.blue)
+        red_repeative_dots = self._get_number_of_repeative_dots(self.red)
+
+        return ((blue_repeative_dots - (3 * red_repeative_dots)) + 100)
+
+
+
+
 class Sim:
     # Set true for graphical interface
     GUI = False
@@ -19,7 +44,7 @@ class Sim:
     minimax_depth = 0
     prune = False
 
-    def __init__(self, minimax_depth, prune, gui):
+    def __init__(self, minimax_depth, prune, gui) -> None:
         self.GUI = gui
         self.prune = prune
         self.minimax_depth = minimax_depth
@@ -92,23 +117,35 @@ class Sim:
         self.screen.update()
         sleep(1)
     
-                
-    def _evaluate(self):
-        pass
-        #TODO
+    def find_next_best_possible_move(self, depth, player_turn):
+        if self.prune == True:
+            return self.alpha_beta_tree(depth, player_turn)
+        return self.minimax_tree(depth, player_turn)
 
-    def minimax(self, depth, player_turn):
+
+    # def _evaluate(self):
+    #     pass
+
+    def alpha_beta_tree(self, depth, player_turn):
         pass
-        #TODO
+
+
+    def minimax_tree(self, depth, player_turn):
+        pass
         
     def enemy(self):
         return random.choice(self.available_moves)
+
+    def _swap_turn(turn):
+        if turn == "red": 
+            return "blue"
+        return "red"
 
     def play(self):
         self.initialize()
         while True:
             if self.turn == 'red':
-                selection = self.minimax(depth=self.minimax_depth, player_turn=self.turn)[0]
+                selection = self.find_next_best_possible_move(self.minimax_depth, self.turn)#must return a tupel
                 if selection[1] < selection[0]:
                     selection = (selection[1], selection[0])
             else:
@@ -124,8 +161,9 @@ class Sim:
 
             self.available_moves.remove(selection)
             self.turn = self._swap_turn(self.turn)
-            selection = []
+            selection = [] #actually not necessary at all
             self.draw()
+
             r = self.gameover(self.red, self.blue)
             if r != 0:
                 return r
@@ -151,7 +189,12 @@ class Sim:
 
 if __name__=="__main__":
 
-    game = Sim(minimax_depth=int(argv[1]), prune=True, gui=bool(int(argv[2])))
+    minimax_depth = 3
+    prune = False
+    gui = True
+
+    game = Sim(minimax_depth, prune, gui)
+    # game = Sim(minimax_depth=int(argv[1]), prune=True, gui=bool(int(argv[2])))
 
     results = {"red": 0, "blue": 0}
     for i in range(10):
