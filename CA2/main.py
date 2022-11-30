@@ -9,12 +9,14 @@ import copy as cp
 
 NOT_FOUND = -1
 
+INF = 256
+
 class State:
 
     def __init__(self, red :list, blue :list, available_moves :list, turn :str, parent = None) -> None:
         self.red_moves = red
         self.blue_moves = blue
-        self.avavailable_moves = available_moves
+        self.available_moves = available_moves
         self.turn = turn
         self.parent = parent
         self.value = NOT_FOUND
@@ -32,19 +34,32 @@ class State:
 
         return len(dots) - len(list(dict.fromkeys(dots)))
 
-    def get_huristic(self) -> int:
-        blue_repeative_dots = self._get_number_of_repeative_dots(self.blue)
-        red_repeative_dots = self._get_number_of_repeative_dots(self.red)
+    def cal_huristic(self):
+        blue_repeative_dots = self._get_number_of_repeative_dots(self.blue_moves)
+        red_repeative_dots = self._get_number_of_repeative_dots(self.red_moves)
+        h = ((blue_repeative_dots - (5 * red_repeative_dots)) + 200)
 
-        self.value = ((blue_repeative_dots - (3 * red_repeative_dots)) + 100)
-        return self.value
+        g = self._gameover(self.red_moves, self.blue_moves)
+        if  g == "blue":
+            h -= 50
+        elif g == "red":
+            h += 50
+
+        # h = 200
+        # g = self._gameover(self.red_moves, self.blue_moves)
+        # if  g == "blue":
+        #     h -= 50
+        # elif g == "red":
+        #     h += 50
+
+        self.value = h
 
     def get_successors(self):
         successors = []
         for move in self.available_moves:
             red = cp.deepcopy(self.red_moves)
             blue = cp.deepcopy(self.blue_moves)
-            available = cp.deepcopy(self.avavailable_moves)
+            available = cp.deepcopy(self.available_moves)
             available.remove(move)
             if self.turn == "red":
                 red.append(move)
@@ -53,6 +68,24 @@ class State:
                 blue.append(move)
                 successors.append(State(red, blue, available, "red", self))
         return successors
+
+    def _gameover(self, r, b):
+        if len(r) < 3:
+            return 0
+        r.sort()
+        for i in range(len(r) - 2):
+            for j in range(i + 1, len(r) - 1):
+                for k in range(j + 1, len(r)):
+                    if r[i][0] == r[j][0] and r[i][1] == r[k][0] and r[j][1] == r[k][1]:
+                        return 'blue'
+        if len(b) < 3: return 0
+        b.sort()
+        for i in range(len(b) - 2):
+            for j in range(i + 1, len(b) - 1):
+                for k in range(j + 1, len(b)):
+                    if b[i][0] == b[j][0] and b[i][1] == b[k][0] and b[j][1] == b[k][1]:
+                        return 'red'
+        return 0
 
             
 class Sim:
@@ -142,14 +175,66 @@ class Sim:
         sleep(1)
     
     def find_next_best_possible_move(self, depth, player_turn):
-        if self.prune == True:
-            return self.alpha_beta_tree(depth, player_turn)
-        return self.minimax_tree(depth, player_turn)
+        initial_state = State(self.red, self.blue, self.available_moves, "red")
+        s = self._max_value(initial_state)
+        while s.parent.parent != None:
+            s = s.parent
+
+        #BUG FIX:
+        if depth == 1:
+            for move in s.red_moves:
+                if move not in self.red:
+                    return move
+
+        return s.red_moves[-1]
+
+    def _max_value(self, state :State, height = 0 ,alpha = -INF, beta = INF) -> State:
+        if height == self.minimax_depth:
+            state.cal_huristic()
+            return state
+        v = -INF
+        result :State = state
+        i = 0
+        for s in state.get_successors():
+            i += 1
+            candidate = self._min_value(s, height + 1, alpha, beta)
+            if v < candidate.get_value():
+                v = candidate.get_value()
+                result = candidate
+            if self.prune:
+                if v >= beta: return candidate
+                alpha = max(alpha, v)
+        if i == 0: 
+            result.cal_huristic()
+            print("i = 0")
+        return result        
+
+    def _min_value(self, state :State, height = 0 ,alpha = -INF, beta = INF) -> State:
+        if height == self.minimax_depth:
+            state.cal_huristic()
+            return state
+        v = INF
+        result :State = state
+        i = 0
+        for s in state.get_successors():
+            i += 1
+            candidate = self._max_value(s, height + 1, alpha, beta)
+            if v > candidate.get_value():
+                v = candidate.get_value()
+                result = candidate
+            if self.prune:
+                if v <= alpha: return candidate
+                beta = min(beta, v)
+        if i == 0: 
+            result.cal_huristic()
+            print("i = 0")
+        return result
+    
 
     def enemy(self):
         return random.choice(self.available_moves)
 
-    def _swap_turn(turn):
+    def _swap_turn(self, turn):
         if turn == "red": 
             return "blue"
         return "red"
@@ -166,6 +251,10 @@ class Sim:
                 if selection[1] < selection[0]:
                     selection = (selection[1], selection[0])
             if selection in self.red or selection in self.blue:
+                print("INFO:")
+                print(f"self.blue:{self.blue}")
+                print(f"self.red:{self.red}")
+                print(f"selection:{selection}")
                 raise Exception("Duplicate Move!!!")
             if self.turn == 'red':
                 self.red.append(selection)
@@ -202,17 +291,19 @@ class Sim:
 
 if __name__=="__main__":
 
-    minimax_depth = 3
+    minimax_depth = 5
     prune = False
-    gui = True
+    gui = False
+    plays = 100
 
     game = Sim(minimax_depth, prune, gui)
     # game = Sim(minimax_depth=int(argv[1]), prune=True, gui=bool(int(argv[2])))
 
     results = {"red": 0, "blue": 0}
-    for i in range(10):
+    for i in range(plays):
         print(i)
         results[game.play()] += 1
+        print(results)
         
     print(results)
     
