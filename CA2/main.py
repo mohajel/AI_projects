@@ -3,13 +3,15 @@ from select import select
 import turtle
 import math
 import random
+import progressbar as pb
 from time import sleep
-from sys import argv
 import copy as cp
 
 NOT_FOUND = -1
+INF = 1024
+HURISTIC_ONLY_BASED_ON_GAME_OVER = False
+SORT_CHECKINGS = True 
 
-INF = 256
 
 class State:
 
@@ -20,10 +22,13 @@ class State:
         self.turn = turn
         self.parent = parent
         self.value = NOT_FOUND
+    
+    def __lt__(self, other) -> bool:
+        return self.cal_huristic() < other.cal_huristic()
 
     def get_value(self):
         if self.value == NOT_FOUND:
-            print("ERROR VALUE NOT FOUND")
+            return self.cal_huristic()
         return self.value
 
     def _get_number_of_repeative_dots(self, lines):
@@ -34,10 +39,21 @@ class State:
 
         return len(dots) - len(list(dict.fromkeys(dots)))
 
-    def cal_huristic(self):
+    def cal_huristic(self) -> int:
+        if HURISTIC_ONLY_BASED_ON_GAME_OVER:
+            h = 200
+            g = self._gameover(self.red_moves, self.blue_moves)
+            if  g == "blue":
+                h -= 50
+            elif g == "red":
+                h += 50
+            self.value = h
+            return h
+
         blue_repeative_dots = self._get_number_of_repeative_dots(self.blue_moves)
         red_repeative_dots = self._get_number_of_repeative_dots(self.red_moves)
-        h = ((blue_repeative_dots - (5 * red_repeative_dots)) + 200)
+
+        h = (blue_repeative_dots - (6 * red_repeative_dots)) + 1000
 
         g = self._gameover(self.red_moves, self.blue_moves)
         if  g == "blue":
@@ -45,14 +61,8 @@ class State:
         elif g == "red":
             h += 50
 
-        # h = 200
-        # g = self._gameover(self.red_moves, self.blue_moves)
-        # if  g == "blue":
-        #     h -= 50
-        # elif g == "red":
-        #     h += 50
-
         self.value = h
+        return h
 
     def get_successors(self):
         successors = []
@@ -67,6 +77,10 @@ class State:
             else:
                 blue.append(move)
                 successors.append(State(red, blue, available, "red", self))
+
+            if SORT_CHECKINGS:
+                successors.sort(reverse = True)
+
         return successors
 
     def _gameover(self, r, b):
@@ -87,7 +101,11 @@ class State:
                         return 'red'
         return 0
 
-            
+    def is_over(self) -> bool:
+        if self._gameover(self.red_moves, self.blue_moves) != 0:
+            return True
+        return False
+    
 class Sim:
     
     GUI = False
@@ -105,6 +123,10 @@ class Sim:
         self.GUI = gui
         self.prune = prune
         self.minimax_depth = minimax_depth
+
+        if prune:SORT_CHECKINGS = True
+        else: SORT_CHECKINGS = False
+
         if self.GUI:
             self.setup_screen()
 
@@ -180,57 +202,50 @@ class Sim:
         while s.parent.parent != None:
             s = s.parent
 
-        #BUG FIX:
-        if depth == 1:
-            for move in s.red_moves:
-                if move not in self.red:
-                    return move
-
-        return s.red_moves[-1]
+        for move in reversed(s.red_moves):
+            if move not in self.red:
+                return move
 
     def _max_value(self, state :State, height = 0 ,alpha = -INF, beta = INF) -> State:
-        if height == self.minimax_depth:
+        if height == self.minimax_depth or state.is_over():
             state.cal_huristic()
             return state
-        v = -INF
-        result :State = state
-        i = 0
+
+        v = -INF;result :State = state;i = 0
+
         for s in state.get_successors():
             i += 1
             candidate = self._min_value(s, height + 1, alpha, beta)
-            if v < candidate.get_value():
+            if v < candidate.get_value() or (v == candidate.get_value() and candidate.cal_huristic() > result.cal_huristic()):
                 v = candidate.get_value()
                 result = candidate
             if self.prune:
                 if v >= beta: return candidate
                 alpha = max(alpha, v)
-        if i == 0: 
-            result.cal_huristic()
-            print("i = 0")
+
+        if i == 0: result.cal_huristic()
         return result        
 
     def _min_value(self, state :State, height = 0 ,alpha = -INF, beta = INF) -> State:
-        if height == self.minimax_depth:
+        if height == self.minimax_depth or state.is_over():
             state.cal_huristic()
             return state
-        v = INF
-        result :State = state
-        i = 0
+
+        v = INF;result :State = state;i = 0
+
         for s in state.get_successors():
             i += 1
             candidate = self._max_value(s, height + 1, alpha, beta)
-            if v > candidate.get_value():
+            if v > candidate.get_value() or (v == candidate.get_value() and candidate.cal_huristic() > result.cal_huristic()):
                 v = candidate.get_value()
                 result = candidate
             if self.prune:
                 if v <= alpha: return candidate
                 beta = min(beta, v)
-        if i == 0: 
-            result.cal_huristic()
-            print("i = 0")
+
+        if i == 0: result.cal_huristic()
         return result
     
-
     def enemy(self):
         return random.choice(self.available_moves)
 
@@ -243,7 +258,7 @@ class Sim:
         self.initialize()
         while True:
             if self.turn == 'red':
-                selection = self.find_next_best_possible_move(self.minimax_depth, self.turn)#must return a tupel
+                selection = self.find_next_best_possible_move(self.minimax_depth, self.turn)
                 if selection[1] < selection[0]:
                     selection = (selection[1], selection[0])
             else:
@@ -263,9 +278,7 @@ class Sim:
 
             self.available_moves.remove(selection)
             self.turn = self._swap_turn(self.turn)
-            selection = [] #actually not necessary at all
             self.draw()
-
             r = self.gameover(self.red, self.blue)
             if r != 0:
                 return r
@@ -288,22 +301,24 @@ class Sim:
                         return 'red'
         return 0
 
-
 if __name__=="__main__":
 
     minimax_depth = 5
-    prune = False
+    prune = True
     gui = False
     plays = 100
 
     game = Sim(minimax_depth, prune, gui)
-    # game = Sim(minimax_depth=int(argv[1]), prune=True, gui=bool(int(argv[2])))
-
     results = {"red": 0, "blue": 0}
+
+    print("\033[94m")
+    bar = pb.ProgressBar(maxval=plays, widgets=[pb.Bar('=', '[', ']'), ' ', pb.Percentage()])
+    bar.start()
+
     for i in range(plays):
-        print(i)
         results[game.play()] += 1
-        print(results)
-        
-    print(results)
+        bar.update(i)
+
+    bar.finish()
+    print(f"\033[0m Result:\n{results}")
     
