@@ -10,7 +10,8 @@ import copy as cp
 NOT_FOUND = -1
 INF = 1024
 HURISTIC_ONLY_BASED_ON_GAME_OVER = False
-SORT_CHECKINGS = True 
+SORT_CHECKINGS = True
+GUI_SLEEP_TIME = 0.2
 
 
 class State:
@@ -194,7 +195,7 @@ class Sim:
                            (math.cos(math.radians(self.blue[i][1] * 60)), math.sin(math.radians(self.blue[i][1] * 60))),
                            'blue')
         self.screen.update()
-        sleep(1)
+        sleep(GUI_SLEEP_TIME)
     
     def find_next_best_possible_move(self, depth, player_turn):
         initial_state = State(self.red, self.blue, self.available_moves, "red")
