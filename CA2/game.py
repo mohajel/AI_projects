@@ -268,10 +268,6 @@ class Sim:
                 if selection[1] < selection[0]:
                     selection = (selection[1], selection[0])
             if selection in self.red or selection in self.blue:
-                print("INFO:")
-                print(f"self.blue:{self.blue}")
-                print(f"self.red:{self.red}")
-                print(f"selection:{selection}")
                 raise Exception("Duplicate Move!!!")
             if self.turn == 'red':
                 self.red.append(selection)
