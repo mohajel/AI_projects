@@ -304,7 +304,7 @@ class Sim:
 
 if __name__=="__main__":
 
-    minimax_depth = 5
+    minimax_depth = 3
     prune = True
     gui = False
     plays = 100
@@ -317,7 +317,8 @@ if __name__=="__main__":
     bar.start()
 
     for i in range(plays):
-        results[game.play()] += 1
+        winner = game.play()
+        results[winner] += 1
         bar.update(i)
 
     bar.finish()
