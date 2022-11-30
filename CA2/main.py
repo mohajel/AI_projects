@@ -11,8 +11,9 @@ NOT_FOUND = -1
 INF = 1024
 HURISTIC_ONLY_BASED_ON_GAME_OVER = False
 SORT_CHECKINGS = True
-GUI_SLEEP_TIME = 0.2
+GUI_SLEEP_TIME = 1
 
+dot_color = 'dark gray'
 
 class State:
 
@@ -181,7 +182,7 @@ class Sim:
             if i in self.selection:
                 self.draw_dot(self.dots[i][0], self.dots[i][1], self.turn)
             else:
-                self.draw_dot(self.dots[i][0], self.dots[i][1], 'dark gray')
+                self.draw_dot(self.dots[i][0], self.dots[i][1], dot_color)
 
     def draw(self):
         if not self.GUI: return 0
@@ -302,12 +303,13 @@ class Sim:
                         return 'red'
         return 0
 
+
 if __name__=="__main__":
 
-    minimax_depth = 3
-    prune = True
+    minimax_depth = 2
+    prune = False
     gui = False
-    plays = 100
+    plays = 1000
 
     game = Sim(minimax_depth, prune, gui)
     results = {"red": 0, "blue": 0}
@@ -319,6 +321,7 @@ if __name__=="__main__":
     for i in range(plays):
         winner = game.play()
         results[winner] += 1
+        dot_color = winner
         bar.update(i)
 
     bar.finish()
