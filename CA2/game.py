@@ -1,5 +1,6 @@
+#  In the Name of God
+
 from select import select
-# from symbol import dotted_as_name
 import turtle
 import math
 import random
@@ -55,7 +56,7 @@ class State:
         blue_repeative_dots = self._get_number_of_repeative_dots(self.blue_moves)
         red_repeative_dots = self._get_number_of_repeative_dots(self.red_moves)
 
-        h = (blue_repeative_dots - (6 * red_repeative_dots)) + 1000
+        h = (blue_repeative_dots - (6 * red_repeative_dots)) + 500
 
         g = self._gameover(self.red_moves, self.blue_moves)
         if  g == "blue":
@@ -79,9 +80,6 @@ class State:
             else:
                 blue.append(move)
                 successors.append(State(red, blue, available, "red", self))
-
-            # if SORT_CHECKINGS:
-            #     successors.sort(reverse = True)
 
         return successors
 
@@ -308,7 +306,7 @@ class Sim:
 
 if __name__=="__main__":
 
-    minimax_depth = 5
+    minimax_depth = 3
     prune = False
     gui = False
     plays = 20
