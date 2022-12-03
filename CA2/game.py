@@ -80,8 +80,8 @@ class State:
                 blue.append(move)
                 successors.append(State(red, blue, available, "red", self))
 
-            if SORT_CHECKINGS:
-                successors.sort(reverse = True)
+            # if SORT_CHECKINGS:
+            #     successors.sort(reverse = True)
 
         return successors
 
@@ -215,7 +215,10 @@ class Sim:
 
         v = -INF;result :State = state;i = 0
 
-        for s in state.get_successors():
+        successors = state.get_successors()
+        if SORT_CHECKINGS: successors.sort(reverse = True)
+
+        for s in successors:
             i += 1
             candidate = self._min_value(s, height + 1, alpha, beta)
             if v < candidate.get_value() or (v == candidate.get_value() and candidate.cal_huristic() > result.cal_huristic()):
@@ -235,7 +238,10 @@ class Sim:
 
         v = INF;result :State = state;i = 0
 
-        for s in state.get_successors():
+        successors = state.get_successors()
+        if SORT_CHECKINGS: successors.sort()
+
+        for s in successors:
             i += 1
             candidate = self._max_value(s, height + 1, alpha, beta)
             if v > candidate.get_value() or (v == candidate.get_value() and candidate.cal_huristic() > result.cal_huristic()):
@@ -302,10 +308,10 @@ class Sim:
 
 if __name__=="__main__":
 
-    minimax_depth = 2
+    minimax_depth = 5
     prune = False
     gui = False
-    plays = 1000
+    plays = 20
 
     game = Sim(minimax_depth, prune, gui)
     results = {"red": 0, "blue": 0}
