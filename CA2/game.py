@@ -306,9 +306,9 @@ class Sim:
 
 if __name__=="__main__":
 
-    minimax_depth = 3
-    prune = False
-    gui = False
+    minimax_depth = 5
+    prune = True
+    gui = True
     plays = 20
 
     game = Sim(minimax_depth, prune, gui)
